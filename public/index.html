@@ -1,0 +1,474 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <title>Atlantic Waves | Deriv Live</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #06101d;
+      --card: #0c1b2c;
+      --line: #20364d;
+      --text: #f3f7fb;
+      --muted: #9aadc1;
+      --blue: #168bff;
+      --green: #39d99a;
+      --red: #ff6677;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #103654, var(--bg) 48%);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+    }
+
+    main {
+      width: min(100% - 28px, 520px);
+      margin: auto;
+      padding: 22px 0 40px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    h1 { font-size: 23px; margin: 0; }
+    h2 { font-size: 16px; margin: 0 0 14px; }
+    p { line-height: 1.5; }
+
+    .muted { color: var(--muted); font-size: 13px; }
+    .pill {
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 30px;
+      font-size: 11px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 17px;
+      margin-bottom: 14px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .balance {
+      font-size: 34px;
+      font-weight: 800;
+      margin: 7px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .value { font-size: 18px; font-weight: 700; }
+    .green { color: var(--green); }
+    .red { color: var(--red); }
+
+    button, select {
+      width: 100%;
+      border-radius: 12px;
+      padding: 13px;
+      font: inherit;
+      margin-top: 10px;
+    }
+
+    button {
+      border: 0;
+      background: var(--blue);
+      color: white;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    button.secondary {
+      background: #142b42;
+      border: 1px solid #2c4965;
+    }
+
+    button.danger {
+      background: #351821;
+      border: 1px solid #713040;
+      color: #ffb4bd;
+    }
+
+    button:disabled { opacity: .45; cursor: not-allowed; }
+
+    select {
+      background: #071523;
+      color: white;
+      border: 1px solid #2c4965;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .row:last-child { border-bottom: 0; }
+    .notice {
+      background: #29220f;
+      color: #f4d98e;
+      border: 1px solid #615025;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    #status { overflow-wrap: anywhere; }
+    .hidden { display: none; }
+  </style>
+</head>
+
+<body>
+<main>
+  <header>
+    <div>
+      <h1>🌊 Atlantic Waves</h1>
+      <div class="muted">Deriv live connection dashboard</div>
+    </div>
+    <div class="pill" id="connectionBadge">OFFLINE</div>
+  </header>
+
+  <section class="card">
+    <div class="label">Account balance</div>
+    <div class="balance" id="balance">—</div>
+    <div class="muted" id="accountInfo">Connect your Deriv account to begin.</div>
+  </section>
+
+  <section class="card">
+    <h2>Account connection</h2>
+    <div id="status" class="muted" role="status" aria-live="polite">
+      Not connected to Deriv.
+    </div>
+
+    <button id="loginButton">CONNECT DERIV ACCOUNT</button>
+    <button id="logoutButton" class="danger hidden">DISCONNECT</button>
+
+    <label for="accountSelect" class="muted">Choose trading account</label>
+    <select id="accountSelect" disabled>
+      <option value="">Connect first</option>
+    </select>
+
+    <button id="connectButton" class="secondary" disabled>
+      CONNECT LIVE DATA
+    </button>
+  </section>
+
+  <section class="card">
+    <h2>Market monitor</h2>
+    <div class="row">
+      <span class="muted">Instrument</span>
+      <span class="value" id="symbolLabel">Volatility 100 (1s)</span>
+    </div>
+    <select id="symbolSelect" aria-label="Market instrument">
+      <option value="1HZ100V">Volatility 100 (1s)</option>
+      <option value="1HZ75V">Volatility 75 (1s)</option>
+      <option value="1HZ50V">Volatility 50 (1s)</option>
+      <option value="1HZ10V">Volatility 10 (1s)</option>
+    </select>
+    <div class="row">
+      <span class="muted">Latest quote</span>
+      <span class="value" id="latestQuote">—</span>
+    </div>
+    <div class="row">
+      <span class="muted">Last digit</span>
+      <span class="value" id="lastDigit">—</span>
+    </div>
+    <div class="row">
+      <span class="muted">Market updates</span>
+      <span class="value" id="tickCount">0</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Trading status</h2>
+    <div class="row">
+      <span class="muted">Automatic trading</span>
+      <span class="value">DISABLED</span>
+    </div>
+    <p class="muted">
+      This version monitors your selected account and market data.
+      It does not send buy or sell orders.
+    </p>
+    <div class="notice">
+      Deriv trading can result in the loss of your stake. Confirm the account
+      type and currency before proceeding. A live connection does not mean a
+      strategy is profitable.
+    </div>
+  </section>
+</main>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+
+  const state = {
+    authenticated: false,
+    accountId: "",
+    ws: null,
+    symbol: "1HZ100V",
+    tickCount: 0,
+    lastBalance: null
+  };
+
+  function status(message) {
+    $("status").textContent = message;
+  }
+
+  function showConnection(online) {
+    $("connectionBadge").textContent = online ? "ONLINE" : "OFFLINE";
+    $("connectionBadge").className =
+      "pill " + (online ? "green" : "red");
+  }
+
+  function send(message) {
+    if (state.ws && state.ws.readyState === WebSocket.OPEN) {
+      state.ws.send(JSON.stringify(message));
+    }
+  }
+
+  function disconnectMarket() {
+    if (state.ws) {
+      state.ws.onclose = null;
+      state.ws.close();
+      state.ws = null;
+    }
+    showConnection(false);
+    $("latestQuote").textContent = "—";
+    $("lastDigit").textContent = "—";
+    $("tickCount").textContent = "0";
+    state.tickCount = 0;
+  }
+
+  async function checkSession() {
+    try {
+      const response = await fetch("/api/session", {
+        credentials: "same-origin"
+      });
+      const data = await response.json();
+
+      state.authenticated = response.ok && data.authenticated === true;
+      updateButtons();
+
+      if (state.authenticated) {
+        status("Deriv authorization confirmed. Loading accounts…");
+        await loadAccounts();
+      } else {
+        status("Connect your Deriv account to continue.");
+      }
+    } catch (error) {
+      status("Could not contact the Atlantic Waves server.");
+    }
+  }
+
+  function updateButtons() {
+    $("loginButton").classList.toggle("hidden", state.authenticated);
+    $("logoutButton").classList.toggle("hidden", !state.authenticated);
+    $("accountSelect").disabled = !state.authenticated;
+    $("connectButton").disabled =
+      !state.authenticated || !state.accountId;
+  }
+
+  async function loadAccounts() {
+    try {
+      const response = await fetch("/api/accounts", {
+        credentials: "same-origin"
+      });
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Could not load Deriv accounts.");
+      }
+
+      const accounts = data.data?.accounts || data.accounts || [];
+      const select = $("accountSelect");
+      select.replaceChildren();
+
+      if (!accounts.length) {
+        select.add(new Option("No accounts returned", ""));
+        state.accountId = "";
+        updateButtons();
+        status("Authorization succeeded, but no accounts were returned.");
+        return;
+      }
+
+      accounts.forEach(account => {
+        const id = account.account_id || account.id;
+        if (!id) return;
+
+        const type = account.account_type || "account";
+        const currency = account.currency || "";
+        const label = `${id} — ${type} ${currency}`.trim();
+
+        select.add(new Option(label, id));
+      });
+
+      state.accountId = select.value;
+      updateButtons();
+      status("Account list loaded. Check the account before connecting.");
+    } catch (error) {
+      status(error.message || "Unable to load accounts.");
+    }
+  }
+
+  $("loginButton").addEventListener("click", () => {
+    window.location.href = "/auth/login";
+  });
+
+  $("logoutButton").addEventListener("click", async () => {
+    disconnectMarket();
+
+    try {
+      await fetch("/auth/logout", {
+        method: "POST",
+        credentials: "same-origin"
+      });
+    } finally {
+      window.location.reload();
+    }
+  });
+
+  $("accountSelect").addEventListener("change", event => {
+    state.accountId = event.target.value;
+    $("balance").textContent = "—";
+    $("accountInfo").textContent = "Account selected. Connect to load data.";
+    updateButtons();
+  });
+
+  $("symbolSelect").addEventListener("change", event => {
+    state.symbol = event.target.value;
+    $("symbolLabel").textContent =
+      event.target.options[event.target.selectedIndex].text;
+
+    if (state.ws) {
+      send({ forget_all: "ticks" });
+      state.tickCount = 0;
+      $("tickCount").textContent = "0";
+      send({ ticks: state.symbol, subscribe: 1, req_id: 2 });
+    }
+  });
+
+  $("connectButton").addEventListener("click", async () => {
+    if (!state.accountId) {
+      status("Select an account first.");
+      return;
+    }
+
+    disconnectMarket();
+    status("Requesting a trading data connection…");
+
+    try {
+      const response = await fetch("/api/otp", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ accountId: state.accountId })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Could not create a trading session.");
+      }
+
+      const url = data.data?.url;
+      if (!url) {
+        throw new Error("Deriv did not return a WebSocket URL.");
+      }
+
+      const ws = new WebSocket(url);
+      state.ws = ws;
+
+      ws.onopen = () => {
+        if (state.ws !== ws) return;
+        showConnection(true);
+        status("Connected. Waiting for balance and market updates…");
+        send({ balance: 1, subscribe: 1, req_id: 1 });
+        send({ ticks: state.symbol, subscribe: 1, req_id: 2 });
+      };
+
+      ws.onmessage = event => {
+        if (state.ws !== ws) return;
+
+        let message;
+        try {
+          message = JSON.parse(event.data);
+        } catch {
+          return;
+        }
+
+        if (message.error) {
+          status("Deriv message: " + message.error.message);
+          return;
+        }
+
+        if (message.msg_type === "balance" && message.balance) {
+          const b = message.balance;
+          state.lastBalance = Number(b.balance);
+          const currency = b.currency || "";
+          $("balance").textContent =
+            Number.isFinite(state.lastBalance)
+              ? `${currency} ${state.lastBalance.toFixed(2)}`
+              : "—";
+          $("accountInfo").textContent =
+            `Account: ${state.accountId} · ${b.loginid || ""}`;
+          status("Connected. Receiving account and market data.");
+        }
+
+        if (message.msg_type === "tick" && message.tick) {
+          const quote = String(message.tick.quote);
+          const digits = quote.replace(/\D/g, "");
+          $("latestQuote").textContent = quote;
+          $("lastDigit").textContent = digits ? digits.slice(-1) : "—";
+          state.tickCount += 1;
+          $("tickCount").textContent = String(state.tickCount);
+        }
+      };
+
+      ws.onerror = () => {
+        if (state.ws === ws) {
+          status("WebSocket connection error. Check the Render logs.");
+          showConnection(false);
+        }
+      };
+
+      ws.onclose = () => {
+        if (state.ws === ws) {
+          state.ws = null;
+          showConnection(false);
+          status("Market connection closed. Reconnect when ready.");
+        }
+      };
+    } catch (error) {
+      status(error.message || "Could not connect.");
+      showConnection(false);
+    }
+  });
+
+  checkSession();
+})();
+</script>
+</body>
+  </html>
